@@ -1,0 +1,1027 @@
+package com.practice.coursemanagementsystem.commons;
+
+public enum MessageType {
+  SUCCESS, INFO, WARNING, ERROR, BAD_REQUEST
+}
+
+package com.practice.coursemanagementsystem.controller;
+
+import com.practice.coursemanagementsystem.commons.MessageType;
+import com.practice.coursemanagementsystem.dtos.CourseRequestDto;
+import com.practice.coursemanagementsystem.dtos.CourseResponseDto;
+import com.practice.coursemanagementsystem.dtos.MessageDto;
+import com.practice.coursemanagementsystem.model.ResponseModel;
+import com.practice.coursemanagementsystem.services.CourseService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/course")
+public class CourseController {
+
+  public  CourseService courseService;
+
+  @Autowired
+  public CourseController(CourseService courseService){
+    this.courseService = courseService;
+  }
+  @PostMapping("/create-course")
+  public ResponseModel createCourse(@RequestBody CourseRequestDto courseRequestDto){
+
+    try {
+      CourseResponseDto responseDto = courseService.createCourse(courseRequestDto);
+      return new ResponseModel(
+          HttpStatus.CREATED.value(),
+          responseDto,
+          new MessageDto("Course created successfully", MessageType.SUCCESS)
+      );
+    } catch (Exception e) {
+      return new ResponseModel(
+          HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          new MessageDto("Failed to create course: " + e.getMessage(), MessageType.ERROR)
+      );
+    }
+  }
+  @PostMapping("/enroll-students")
+  public ResponseModel enrollStudents(@RequestParam int studentId , @RequestParam int courseId){
+    try {
+      courseService.enrollStudent(studentId, courseId);
+      return new ResponseModel(
+          HttpStatus.CREATED.value(),
+           studentId,
+          new MessageDto("student enrolled successfully", MessageType.SUCCESS)
+      );
+    }
+    catch (Exception e){
+      return new ResponseModel(
+          HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          new MessageDto("Failed to enroll the student : " + e.getMessage(), MessageType.ERROR)
+      );
+    }
+  }
+
+  @DeleteMapping("/unroll-students")
+  public ResponseModel  unrollStudents(@RequestParam int studentId , @RequestParam int courseId){
+    try {
+      courseService.unenrollStudent(studentId, courseId);
+      return new ResponseModel(
+          HttpStatus.CREATED.value(),
+          studentId,
+          new MessageDto("student unrolled successfully", MessageType.SUCCESS)
+      );
+    }
+    catch (Exception e){
+      return new ResponseModel(
+          HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          new MessageDto("Failed to unroll the student : " + e.getMessage(), MessageType.ERROR)
+      );
+    }
+
+  }
+
+  @GetMapping("/course-details")
+  public ResponseModel getCourseDetails(@RequestParam int courseId){
+    try {
+      CourseResponseDto courseResponseDto =  courseService.getCourseById(courseId);
+      return new ResponseModel(
+          HttpStatus.OK.value(), courseResponseDto,
+          new MessageDto("student enrolled successfully", MessageType.SUCCESS)
+      );
+    }
+    catch (Exception e){
+      return new ResponseModel(
+          HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          new MessageDto("" + e.getMessage(), MessageType.ERROR)
+      );
+    }
+  }
+
+}
+package com.practice.coursemanagementsystem.controller;
+
+import com.practice.coursemanagementsystem.commons.MessageType;
+import com.practice.coursemanagementsystem.dtos.InstructorRequestDto;
+import com.practice.coursemanagementsystem.dtos.MessageDto;
+import com.practice.coursemanagementsystem.model.ResponseModel;
+import com.practice.coursemanagementsystem.services.InstructorService;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/instructor")
+public class InstructorController {
+
+  private final InstructorService instructorService;
+
+  public InstructorController(InstructorService instructorService){
+    this.instructorService = instructorService;
+  }
+  @PostMapping("/create-instructor")
+  public ResponseModel createInstructor(@RequestBody InstructorRequestDto instructorRequestDto){
+    try {
+       instructorService.createInstructor(instructorRequestDto);
+      return new ResponseModel(
+          HttpStatus.CREATED.value(),
+          instructorRequestDto,
+          new MessageDto("Instructor created successfully", MessageType.SUCCESS)
+      );
+    } catch (Exception e) {
+      return new ResponseModel(
+          HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          new MessageDto("Failed to create instructor: " + e.getMessage(), MessageType.ERROR)
+      );
+    }
+  }
+
+  @PostMapping("/instructor-assignment")
+  public ResponseModel assignInstructor(@RequestParam Integer instructorId , @RequestParam Integer courseId){
+    try {
+      instructorService.assignInstructor(instructorId,courseId);
+
+      return new ResponseModel(
+          HttpStatus.CREATED.value(),
+          instructorId,
+          new MessageDto("Instructor with id :" + instructorId +
+              "is successfully assigned to course with id :"+courseId , MessageType.SUCCESS)
+      );
+    } catch (Exception e) {
+      return new ResponseModel(
+          HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          new MessageDto("Failed to assign instructor: " + e.getMessage(), MessageType.ERROR)
+      );
+    }
+  }
+
+  @PostMapping("/instructor-deassignment")
+  public ResponseModel deAssignInstructor(@RequestParam Integer instructorId , @RequestParam Integer courseId){
+    try {
+      instructorService.deAssignInstructor(instructorId,courseId);
+
+      return new ResponseModel(
+          HttpStatus.CREATED.value(),
+          instructorId,
+          new MessageDto("Instructor with id :" + instructorId +
+              "is successfully de assigned to course with id :"+courseId , MessageType.SUCCESS)
+      );
+    } catch (Exception e) {
+      return new ResponseModel(
+          HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          new MessageDto("Failed to de assign instructor: " + e.getMessage(), MessageType.ERROR)
+      );
+    }
+  }
+}
+
+package com.practice.coursemanagementsystem.controller;
+
+import com.practice.coursemanagementsystem.commons.MessageType;
+import com.practice.coursemanagementsystem.dtos.LessonRequestDto;
+import com.practice.coursemanagementsystem.dtos.MessageDto;
+import com.practice.coursemanagementsystem.model.ResponseModel;
+import com.practice.coursemanagementsystem.services.LessonService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RequestMapping("/api/lesson")
+@RestController
+public class LessonController {
+
+  private final LessonService lessonService;
+
+  @Autowired
+  public LessonController(LessonService lessonService){
+    this.lessonService =lessonService;
+  }
+  @PostMapping("/add-lesson")
+  public ResponseModel addLesson(@RequestBody LessonRequestDto lessonRequestDto){
+    try {
+      lessonService.addLesson(lessonRequestDto);
+
+      return new ResponseModel(
+          HttpStatus.OK.value(), lessonRequestDto.getTitle(),
+          new MessageDto("lesson added successfully", MessageType.SUCCESS)
+      );
+    } catch (Exception e) {
+      return new ResponseModel(
+          HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          new MessageDto("" + e.getMessage(), MessageType.ERROR)
+      );
+    }
+  }
+}
+
+package com.practice.coursemanagementsystem.controller;
+
+import com.practice.coursemanagementsystem.commons.MessageType;
+import com.practice.coursemanagementsystem.dtos.MessageDto;
+import com.practice.coursemanagementsystem.dtos.StudentRequestDto;
+import com.practice.coursemanagementsystem.dtos.StudentResponseDto;
+import com.practice.coursemanagementsystem.model.ResponseModel;
+import com.practice.coursemanagementsystem.services.StudentService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/student")
+public class StudentController {
+
+  private final StudentService studentService;
+
+  @Autowired
+  public StudentController(StudentService studentService) {
+    this.studentService = studentService;
+  }
+
+  @PostMapping("/create-student")
+  public ResponseModel createStudent(@RequestBody StudentRequestDto studentRequestDto) {
+    try {
+      StudentResponseDto studentResponseDto = studentService.createStudent(studentRequestDto);
+      return new ResponseModel(HttpStatus.OK.value(), studentResponseDto,
+          new MessageDto("created" , MessageType.SUCCESS));
+    }
+    catch (Exception e){
+      return new ResponseModel(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          new MessageDto("created" , MessageType.ERROR));
+    }
+  }
+}
+package com.practice.coursemanagementsystem.dtos;
+
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+
+@Getter
+@Setter
+public class CourseRequestDto {
+  private String title;
+
+  private String  description;
+
+  private Double price;
+
+  private List<LessonDto> lessonDtos;
+
+  private List<Integer> instructorIds;
+
+}
+package com.practice.coursemanagementsystem.dtos;
+
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+import java.util.Set;
+
+@Getter
+@Setter
+public class CourseResponseDto {
+  private Integer id;
+  private String name;
+  private String description;
+  private Double price;
+  private Set<InstructorDto> instructors;
+  private List<LessonDto> lessons;
+
+}
+package com.practice.coursemanagementsystem.dtos;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class InstructorDto {
+  private Integer id;
+  private String name;
+}
+
+package com.practice.coursemanagementsystem.dtos;
+
+
+import lombok.Getter;
+import lombok.Setter;
+
+
+@Getter
+@Setter
+public class InstructorRequestDto {
+  private String email;
+  private String name;
+  private String expertise;
+}
+
+package com.practice.coursemanagementsystem.dtos;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class LessonDto {
+  private Integer id;
+  private String title;
+  private String content;
+  private Double duration;
+}
+
+package com.practice.coursemanagementsystem.dtos;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class LessonRequestDto {
+  private String title;
+  private String content;
+  private Double duration;
+  private Integer courseId;
+}
+
+package com.practice.coursemanagementsystem.dtos;
+
+import com.practice.coursemanagementsystem.commons.MessageType;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.io.Serializable;
+
+@Getter
+@Setter
+public class MessageDto implements Serializable {
+
+  private String message;
+  private MessageType type;
+
+  public MessageDto(String message, MessageType type) {
+    this.message = message;
+    this.type = type;
+  }
+}
+package com.practice.coursemanagementsystem.dtos;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class StudentRequestDto {
+  private String name;
+  private String email;
+}
+
+package com.practice.coursemanagementsystem.dtos;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class StudentResponseDto {
+  private Integer studentId;
+  private String  name;
+}
+
+package com.practice.coursemanagementsystem.Exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+  public ResourceNotFoundException(String s) {
+    super(s);
+  }
+}
+
+package com.practice.coursemanagementsystem.model;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+@Entity
+@Table(name = "course")
+@Getter
+@Setter
+public class CourseEntity {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Integer id;
+
+  private String name;
+
+  private String  description;
+
+  private Double price;
+
+  @ManyToMany()
+  @JoinTable(name = "course_student",
+  joinColumns = @JoinColumn( name = "course_id"), inverseJoinColumns = @JoinColumn(name = "student_id"))
+  private Set<StudentEntity> studentEntityList;
+
+  @ManyToMany()
+  @JoinTable(
+      name = "course_instructor",  // name of the join table
+      joinColumns = @JoinColumn(name = "course_id"),
+      inverseJoinColumns = @JoinColumn(name = "instructor_id")
+  )
+  private Set<InstructorEntity> instructorEntities;
+
+  @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+  private List<LessonEntity> lessonEntities = new ArrayList<>();
+}
+package com.practice.coursemanagementsystem.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+import java.util.Set;
+
+@Table(name = "instructor")
+@Entity
+@Getter
+@Setter
+public class InstructorEntity {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Integer id;
+
+  private String name;
+  private String email;
+  private String expertise;
+
+  @ManyToMany(mappedBy = "instructorEntities")
+  private Set<CourseEntity> courseEntityList;
+}
+package com.practice.coursemanagementsystem.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+
+@Entity
+@Table(name = "lesson")
+@Getter
+@Setter
+public class LessonEntity {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Integer id;
+  private String title;
+  private String content;
+  private Double duration;
+
+  @ManyToOne
+  @JoinColumn(name = "course_id")
+  private CourseEntity course;
+
+}
+package com.practice.coursemanagementsystem.model;
+
+import com.practice.coursemanagementsystem.dtos.MessageDto;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Getter
+@Setter
+public class ResponseModel {
+  private Integer statusCode;
+  private Object dataModel;
+  private List<MessageDto> responseMessage = new ArrayList<>();
+
+  public ResponseModel(Integer statusCode, Object dataModel, MessageDto message){
+    this.statusCode = statusCode;
+    this.dataModel = dataModel;
+    responseMessage.add(message);
+  }
+
+  public ResponseModel(Integer statusCode, MessageDto messageDto){
+    this.statusCode = statusCode;
+    responseMessage.add(messageDto);
+  }
+}
+package com.practice.coursemanagementsystem.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+import java.util.Set;
+
+@Table(name = "student")
+@Entity
+@Getter
+@Setter
+public class StudentEntity {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Integer id;
+  private String name;
+  private String email;
+  @ManyToMany(mappedBy = "studentEntityList")
+  private Set<CourseEntity> enrolledCourses;
+}
+
+package com.practice.coursemanagementsystem.repository;
+
+import com.practice.coursemanagementsystem.model.CourseEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CourseRepository extends JpaRepository<CourseEntity, Integer> {
+
+
+}
+package com.practice.coursemanagementsystem.repository;
+
+import com.practice.coursemanagementsystem.model.InstructorEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface InstructorRepository  extends JpaRepository<InstructorEntity, Integer> {
+}
+package com.practice.coursemanagementsystem.repository;
+
+import com.practice.coursemanagementsystem.model.InstructorEntity;
+import com.practice.coursemanagementsystem.model.LessonEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface LessonRepository extends JpaRepository<LessonEntity, Integer> {
+}
+package com.practice.coursemanagementsystem.repository;
+
+import com.practice.coursemanagementsystem.model.StudentEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface StudentRepository extends JpaRepository<StudentEntity, Integer> {
+}
+package com.practice.coursemanagementsystem.ServiceImp;
+
+import com.practice.coursemanagementsystem.Exception.ResourceNotFoundException;
+import com.practice.coursemanagementsystem.dtos.CourseRequestDto;
+import com.practice.coursemanagementsystem.dtos.CourseResponseDto;
+import com.practice.coursemanagementsystem.dtos.InstructorDto;
+import com.practice.coursemanagementsystem.dtos.LessonDto;
+import com.practice.coursemanagementsystem.model.CourseEntity;
+import com.practice.coursemanagementsystem.model.InstructorEntity;
+import com.practice.coursemanagementsystem.model.LessonEntity;
+import com.practice.coursemanagementsystem.model.StudentEntity;
+import com.practice.coursemanagementsystem.repository.CourseRepository;
+import com.practice.coursemanagementsystem.repository.InstructorRepository;
+import com.practice.coursemanagementsystem.repository.LessonRepository;
+import com.practice.coursemanagementsystem.repository.StudentRepository;
+import com.practice.coursemanagementsystem.services.CourseService;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Service
+public class CourseServiceImpl implements CourseService {
+  private final CourseRepository courseRepository;
+  private final InstructorRepository instructorRepository;
+  private final LessonRepository lessonRepository;
+  private final StudentRepository studentRepository;
+
+  public CourseServiceImpl(
+      CourseRepository courseRepository, InstructorRepository instructorRepository,
+      LessonRepository lessonRepository, StudentRepository studentRepository) {
+    this.courseRepository = courseRepository;
+    this.instructorRepository = instructorRepository;
+    this.lessonRepository = lessonRepository;
+    this.studentRepository = studentRepository;
+  }
+
+  @Override
+  @Transactional
+  public CourseResponseDto createCourse(CourseRequestDto courseRequestDto) {
+    CourseEntity courseEntity = convertDtoToEntity(courseRequestDto);
+    CourseEntity savedCourse = courseRepository.save(courseEntity);
+
+     checkInstructorIsAvaialble(courseRequestDto.getInstructorIds());
+    // Assign instructors
+    if (courseRequestDto.getInstructorIds() != null && !courseRequestDto.getInstructorIds().isEmpty()) {
+      Set<InstructorEntity> instructors = new HashSet<>(instructorRepository.findAllById(
+          courseRequestDto.getInstructorIds()));
+      savedCourse.setInstructorEntities(instructors);
+    }
+
+    if (courseRequestDto.getLessonDtos() != null && !courseRequestDto.getLessonDtos().isEmpty()) {
+
+      List<LessonEntity> lessons = new ArrayList<>();
+      for (LessonDto lessonDto : courseRequestDto.getLessonDtos()) {
+        LessonEntity lesson = new LessonEntity();
+        lesson.setTitle(lessonDto.getTitle());
+        lesson.setContent(lessonDto.getContent());
+        lesson.setDuration(lessonDto.getDuration());
+        lesson.setCourse(savedCourse);  // Set the course reference
+
+        lessons.add(lesson);
+      }
+      lessonRepository.saveAll(lessons);
+    }
+    CourseEntity refreshedCourse = courseRepository.findById(savedCourse.getId())
+        .orElseThrow(() -> new RuntimeException("Failed to fetch created course"));
+
+    // Convert to response DTO
+    return convertToResponseDto(refreshedCourse);
+  }
+
+  private void checkInstructorIsAvaialble(List<Integer> instructorIds) {
+    for (Integer id: instructorIds) {
+      InstructorEntity instructorEntity = instructorRepository.findById(id).
+          orElseThrow(() -> new EntityNotFoundException("Instructor not found with ID: " + id));
+    }
+  }
+
+  private CourseResponseDto convertToResponseDto(CourseEntity course) {
+    CourseResponseDto responseDto = new CourseResponseDto();
+    responseDto.setId(course.getId());
+    responseDto.setName(course.getName());
+    responseDto.setDescription(course.getDescription());
+    responseDto.setPrice(course.getPrice());
+
+    // Map instructors
+    if (course.getInstructorEntities() != null) {
+      Set<InstructorDto> instructorDtos = convertInstructorEntityToDto(course.getInstructorEntities());
+
+      responseDto.setInstructors(instructorDtos);
+    }
+
+    // Map lessons
+    if (course.getLessonEntities() != null) {
+      List<LessonDto> lessonDtos = convertLessonEntityToDto(course.getLessonEntities());
+
+      responseDto.setLessons(lessonDtos);
+    }
+
+    return responseDto;
+  }
+
+
+  private  List<LessonDto> convertLessonEntityToDto(List<LessonEntity> course){
+    return course.stream()
+        .map(lesson -> {
+          LessonDto dto = new LessonDto();
+          dto.setId(lesson.getId());
+          dto.setTitle(lesson.getTitle());
+          dto.setContent(lesson.getContent());
+          dto.setDuration(lesson.getDuration());
+          return dto;
+        })
+        .collect(Collectors.toList());
+  }
+
+  private Set<InstructorDto> convertInstructorEntityToDto(Set<InstructorEntity> instructorEntities){
+    return instructorEntities.stream().map(instructorEntity -> {
+      InstructorDto dto = new InstructorDto();
+      dto.setId(instructorEntity.getId());
+      dto.setName(instructorEntity.getName());
+      return dto;
+    }).collect(Collectors.toSet());
+  }
+
+  private CourseEntity convertDtoToEntity(CourseRequestDto courseRequestDto) {
+
+    CourseEntity courseEntity = new CourseEntity();
+    courseEntity.setName(courseRequestDto.getTitle());
+    courseEntity.setDescription(courseRequestDto.getDescription());
+    courseEntity.setPrice(courseRequestDto.getPrice());
+    return courseEntity;
+  }
+
+  @Transactional
+  public void enrollStudent(int studentId, int courseId) {
+    CourseEntity courseEntity = courseRepository.findById(courseId).
+        orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + courseId));
+    StudentEntity studentEntity = studentRepository.findById(studentId)
+        .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
+    courseEntity.getStudentEntityList().add(studentEntity);
+    courseRepository.save(courseEntity);
+  }
+
+  public void unenrollStudent(int studentId, int courseId){
+    CourseEntity courseEntity = courseRepository.findById(courseId).
+        orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + courseId));
+    StudentEntity studentEntity = studentRepository.findById(studentId)
+        .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
+    courseEntity.getStudentEntityList().remove(studentEntity);
+    courseRepository.save(courseEntity);
+  }
+
+  public CourseResponseDto getCourseById(Integer courseId){
+    CourseEntity courseEntity = courseRepository.findById(courseId).
+        orElseThrow(()->new ResourceNotFoundException("courseId is not available"));
+
+    return convertEntityToDto(courseEntity);
+
+  }
+
+  private CourseResponseDto convertEntityToDto(CourseEntity courseEntity) {
+    CourseResponseDto courseResponseDto = new CourseResponseDto();
+    courseResponseDto.setName(courseEntity.getName());
+    courseResponseDto.setDescription(courseEntity.getDescription());
+    courseResponseDto.setLessons(convertLessonEntityToDto(courseEntity.getLessonEntities()));
+    courseResponseDto.setId(courseEntity.getId());
+    courseResponseDto.setInstructors(convertInstructorEntityToDto(courseEntity.getInstructorEntities()));
+    courseResponseDto.setPrice(courseEntity.getPrice());
+    return courseResponseDto;
+  }
+}
+package com.practice.coursemanagementsystem.ServiceImp;
+
+import com.practice.coursemanagementsystem.dtos.InstructorRequestDto;
+import com.practice.coursemanagementsystem.model.CourseEntity;
+import com.practice.coursemanagementsystem.model.InstructorEntity;
+import com.practice.coursemanagementsystem.repository.CourseRepository;
+import com.practice.coursemanagementsystem.repository.InstructorRepository;
+import com.practice.coursemanagementsystem.services.InstructorService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Service
+public class InstructorServiceImpl implements InstructorService {
+
+  private final InstructorRepository instructorRepository;
+  private final CourseRepository courseRepository;
+
+  public InstructorServiceImpl(InstructorRepository instructorRepository, CourseRepository courseRepository){
+    this.instructorRepository = instructorRepository;
+    this.courseRepository = courseRepository;
+  }
+
+  @Override
+  public void createInstructor(InstructorRequestDto instructorRequestDto) throws Exception {
+    try {
+      InstructorEntity instructorEntity = convertDtoToEntity(instructorRequestDto);
+      instructorRepository.save(instructorEntity);
+    }
+    catch (Exception e){
+      throw new Exception("Some exception");
+    }
+  }
+
+  private InstructorEntity convertDtoToEntity(InstructorRequestDto instructorRequestDto) {
+    InstructorEntity instructorEntity = new InstructorEntity();
+
+    instructorEntity.setEmail(instructorRequestDto.getEmail());
+    instructorEntity.setName(instructorRequestDto.getName());
+    instructorEntity.setExpertise(instructorRequestDto.getExpertise());
+
+    return instructorEntity;
+  }
+
+  @Transactional
+  public void assignInstructor(Integer instructorId, Integer courseId) throws Exception {
+    try {
+
+     InstructorEntity instructorEntity = instructorRepository.findById(instructorId).
+         orElseThrow(()->new Exception("some exception"));
+      CourseEntity courseEntity = courseRepository.findById(courseId).orElseThrow(()->new Exception("some exception"));
+      if (courseEntity.getInstructorEntities() == null) {
+        courseEntity.setInstructorEntities(new HashSet<>());
+      }
+      courseEntity.getInstructorEntities().add(instructorEntity);
+
+      if (instructorEntity.getCourseEntityList() == null) {
+        instructorEntity.setCourseEntityList(new HashSet<>());
+      }
+      instructorEntity.getCourseEntityList().add(courseEntity);
+
+      courseRepository.save(courseEntity);
+    }
+    catch (Exception e){
+      throw new Exception("Some exception");
+    }
+  }
+  @Transactional
+  public void deAssignInstructor(Integer instructorId, Integer courseId) throws Exception {
+    try {
+      InstructorEntity instructorEntity = instructorRepository.findById(instructorId)
+          .orElseThrow(() -> new Exception("Instructor not found with ID: " + instructorId));
+      CourseEntity courseEntity = courseRepository.findById(courseId)
+          .orElseThrow(() -> new Exception("Course not found with ID: " + courseId));
+
+      // Check if instructor is assigned to the course
+      if (courseEntity.getInstructorEntities() == null ||
+          !courseEntity.getInstructorEntities().contains(instructorEntity)) {
+        throw new Exception("Instructor is not assigned to this course");
+      }
+
+      // Remove from course side (owning side)
+      courseEntity.getInstructorEntities().remove(instructorEntity);
+
+      // Also update instructor side for consistency
+      if (instructorEntity.getCourseEntityList() != null) {
+        instructorEntity.getCourseEntityList().remove(courseEntity);
+      }
+
+      courseRepository.save(courseEntity);
+    }
+    catch (Exception e) {
+      throw new Exception("Failed to de-assign instructor: " + e.getMessage());
+    }
+  }
+}
+package com.practice.coursemanagementsystem.ServiceImp;
+
+import com.practice.coursemanagementsystem.dtos.LessonRequestDto;
+import com.practice.coursemanagementsystem.model.CourseEntity;
+import com.practice.coursemanagementsystem.model.LessonEntity;
+import com.practice.coursemanagementsystem.repository.CourseRepository;
+import com.practice.coursemanagementsystem.repository.LessonRepository;
+import com.practice.coursemanagementsystem.services.LessonService;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+
+@Service
+public class LessonServiceImpl implements LessonService {
+
+  private final LessonRepository lessonRepository;
+  private final CourseRepository courseRepository;
+
+  @Autowired
+  public LessonServiceImpl(LessonRepository lessonRepository, CourseRepository courseRepository){
+    this.lessonRepository = lessonRepository;
+    this.courseRepository = courseRepository;
+  }
+
+  @Override
+  public void addLesson(LessonRequestDto lessonRequestDto) throws Exception {
+    try {
+      LessonEntity lessonEntity = convertDtotoEntity(lessonRequestDto);
+      CourseEntity courseEntity = courseRepository.findById(lessonRequestDto.getCourseId())
+          .orElseThrow(() -> new EntityNotFoundException("Course not found with ID: " + lessonRequestDto.getCourseId()));
+      lessonEntity.setCourse(courseEntity);
+      lessonRepository.save(lessonEntity);
+    }
+    catch (Exception e){
+      throw new Exception("Some Exception occurred");
+    }
+  }
+
+  private LessonEntity convertDtotoEntity(LessonRequestDto lessonRequestDto) {
+
+    LessonEntity lessonEntity = new LessonEntity();
+    lessonEntity.setContent(lessonRequestDto.getContent());
+    lessonEntity.setDuration(lessonRequestDto.getDuration());
+    lessonEntity.setTitle(lessonRequestDto.getTitle());
+
+    return  lessonEntity;
+  }
+}
+package com.practice.coursemanagementsystem.ServiceImp;
+
+import com.practice.coursemanagementsystem.dtos.StudentRequestDto;
+import com.practice.coursemanagementsystem.dtos.StudentResponseDto;
+import com.practice.coursemanagementsystem.model.StudentEntity;
+import com.practice.coursemanagementsystem.repository.StudentRepository;
+import com.practice.coursemanagementsystem.services.StudentService;
+import org.springframework.stereotype.Service;
+
+@Service
+public class StudentServiceImpl implements StudentService {
+
+  private final StudentRepository studentRepository;
+
+  public StudentServiceImpl(StudentRepository studentRepository) {
+    this.studentRepository = studentRepository;
+  }
+
+  @Override
+  public StudentResponseDto createStudent(StudentRequestDto studentRequestDto) throws Exception {
+    try {
+      StudentEntity student = convertDtoToEntity(studentRequestDto);
+      studentRepository.save(student);
+    }
+    catch (Exception e){
+      throw new Exception();
+    }
+    StudentResponseDto studentResponseDto = new StudentResponseDto();
+    studentResponseDto.setName(studentRequestDto.getName());
+    return  studentResponseDto;
+  }
+
+  private StudentEntity convertDtoToEntity(StudentRequestDto studentRequestDto) {
+    StudentEntity student = new StudentEntity();
+    student.setEmail(studentRequestDto.getEmail());
+    student.setName(studentRequestDto.getName());
+    return student;
+  }
+}
+package com.practice.coursemanagementsystem.services;
+
+import com.practice.coursemanagementsystem.dtos.CourseRequestDto;
+import com.practice.coursemanagementsystem.dtos.CourseResponseDto;
+
+public interface CourseService {
+
+  CourseResponseDto createCourse(CourseRequestDto courseRequestDto);
+
+  void enrollStudent(int studentId, int courseId);
+
+  void unenrollStudent(int studentId, int courseId);
+
+  CourseResponseDto getCourseById(Integer courseId);
+}
+package com.practice.coursemanagementsystem.services;
+
+import com.practice.coursemanagementsystem.dtos.InstructorRequestDto;
+
+public interface InstructorService {
+  void createInstructor(InstructorRequestDto instructorRequestDto) throws Exception;
+
+  void assignInstructor(Integer instructorId, Integer courseId) throws Exception;
+
+  void deAssignInstructor(Integer instructorId, Integer courseId) throws Exception;
+}
+package com.practice.coursemanagementsystem.services;
+
+
+import com.practice.coursemanagementsystem.dtos.LessonDto;
+import com.practice.coursemanagementsystem.dtos.LessonRequestDto;
+
+public interface LessonService {
+  void addLesson(LessonRequestDto lessonRequestDto) throws Exception;
+}
+package com.practice.coursemanagementsystem.services;
+
+import com.practice.coursemanagementsystem.dtos.StudentRequestDto;
+import com.practice.coursemanagementsystem.dtos.StudentResponseDto;
+
+public interface StudentService {
+  StudentResponseDto createStudent(StudentRequestDto studentRequestDto) throws Exception;
+}
+spring.application.name=CourseManagementSystem
+
+server.port=8080
+spring.jpa.hibernate.ddl-auto=update
+spring.datasource.url=jdbc:postgresql://localhost:5432/CMS
+spring.datasource.username=postgres
+spring.datasource.password=admin
